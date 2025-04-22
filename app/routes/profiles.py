@@ -1,10 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 from sqlmodel import select
 
 from app.database import AsyncSession, get_db_session
 from app.models.firebase_auth_user import FirebaseAuthUser
 from app.models.profile import Profile
+from app.service.analytics_service import (
+    AnalyticsServiceProtocol,
+    get_analytics_service,
+)
+from app.service.email_service import EmailServiceProtocol, get_email_service
+from app.use_cases.use_cases import sendWelcomeEmail
 
 
 class ProfileResponse(BaseModel):
@@ -49,8 +55,11 @@ async def get_profile_from_request(
 @router.post("/", response_model=ProfileResponse)
 async def create_profile(
     request: Request,
+    background_tasks: BackgroundTasks,
     firebaseUser: FirebaseAuthUser = Depends(get_firebase_user_from_request),
     db: AsyncSession = Depends(get_db_session),
+    analyticsService: AnalyticsServiceProtocol = Depends(get_analytics_service),
+    emailService: EmailServiceProtocol = Depends(get_email_service),
 ):
     """Create a new user profile."""
 
@@ -60,6 +69,7 @@ async def create_profile(
     if existing:
         if existing.banned_at:
             raise HTTPException(status_code=403, detail="Profile is banned")
+        await analyticsService.identify(profile=existing)
         return existing
 
     # Create new profile
@@ -84,6 +94,11 @@ async def create_profile(
     db.add(profile)
     await db.commit()
     await db.refresh(profile)
+
+    await analyticsService.identify(profile=profile)
+
+    background_tasks.add_task(sendWelcomeEmail, profile, emailService)
+
     return profile
 
 
