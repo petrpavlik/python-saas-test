@@ -1,6 +1,16 @@
+import contextlib
+
 from fastapi import FastAPI
 
+from app.database import init_db
+
 app = FastAPI()
+
+
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
 
 
 @app.get("/")
