@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr
 from sqlmodel import select
 
 from app.database import AsyncSession, get_db_session
+from app.models.firebase_auth_user import FirebaseAuthUser
 from app.models.profile import Profile
 
 
@@ -17,14 +18,44 @@ class ProfileResponse(BaseModel):
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 
+def get_firebase_user_from_request(request: Request) -> FirebaseAuthUser:
+    if not hasattr(request.state, "firebase_user"):
+        raise HTTPException(
+            status_code=401, detail="Firebase user not found in request state"
+        )
+
+    firebase_user = request.state.firebase_user
+    if not isinstance(firebase_user, FirebaseAuthUser):
+        raise HTTPException(
+            status_code=401, detail="Invalid firebase user in request state"
+        )
+    return firebase_user
+
+
+async def get_profile_from_request(
+    request: Request, db: AsyncSession = Depends(get_db_session)
+) -> Profile:
+    """Get the profile from the request state."""
+    firebaseUser = get_firebase_user_from_request(request)
+    result = await db.exec(select(Profile).where(Profile.email == firebaseUser.email))
+    existing = result.first()
+    if existing:
+        if existing.banned_at:
+            raise HTTPException(status_code=403, detail="Profile is banned")
+        return existing
+    raise HTTPException(status_code=404, detail="Profile not found")
+
+
 @router.post("/", response_model=ProfileResponse)
-async def create_profile(request: Request, db: AsyncSession = Depends(get_db_session)):
+async def create_profile(
+    request: Request,
+    firebaseUser: FirebaseAuthUser = Depends(get_firebase_user_from_request),
+    db: AsyncSession = Depends(get_db_session),
+):
     """Create a new user profile."""
 
-    debugEmail = "petr@indiepitcher.com"
-
     # Check if profile with this firebase_user_id already exists
-    result = await db.exec(select(Profile).where(Profile.email == debugEmail))
+    result = await db.exec(select(Profile).where(Profile.email == firebaseUser.email))
     existing = result.first()
     if existing:
         if existing.banned_at:
@@ -44,7 +75,10 @@ async def create_profile(request: Request, db: AsyncSession = Depends(get_db_ses
         headers_dict["client_ip"] = client_ip
 
     profile = Profile(
-        email=debugEmail, name="Petr", signup_attribution_data=headers_dict
+        email=firebaseUser.email,
+        signup_attribution_data=headers_dict,
+        name=firebaseUser.name,
+        avatar_url=firebaseUser.avatar_url,
     )
 
     db.add(profile)
@@ -53,20 +87,10 @@ async def create_profile(request: Request, db: AsyncSession = Depends(get_db_ses
     return profile
 
 
-@router.get("/{profile_id}", response_model=ProfileResponse)
-async def get_profile(db: AsyncSession = Depends(get_db_session)):
+@router.get("/", response_model=ProfileResponse)
+async def get_profile(profile: Profile = Depends(get_profile_from_request)):
     """Get profile"""
-
-    debugEmail = "petr@indiepitcher.com"
-
-    result = await db.exec(select(Profile).where(Profile.email == debugEmail))
-    existing = result.first()
-    if existing:
-        if existing.banned_at:
-            raise HTTPException(status_code=403, detail="Profile is banned")
-        return existing
-
-    raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
 
 
 # More endpoints for update, delete, etc.

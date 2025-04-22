@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 
 from app.database import init_db
+from app.models.firebase_auth_user import FirebaseAuthUser
 from app.routes.profiles import router as profiles_router
 
 
@@ -15,6 +17,38 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.middleware("http")
+async def jwt_auth_middleware(request: Request, call_next) -> Response:
+    # Looks like I cannot throw an exception in the middleware (ends up with internal server error), so I have to return a JSONResponse, this sucks
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return JSONResponse(status_code=401, content={"detail": "Missing token"})
+
+    token = auth_header.split(" ")[1]
+
+    # This micks JWT token verification process, we'd greab a user id and email from the token.
+    if token == "petr_token":
+        # TODO: check if there's a user with this email in the database
+        # TODO: check if the user is banned
+        request.state.firebase_user = FirebaseAuthUser(
+            email="petr@indiepitcher.com",
+            user_id="1234567890",  # This would be the Firebase user ID
+        )
+        return await call_next(request)
+    else:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+
+
+# Configure CORS middleware
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],  # Allow all methods (GET, POST, PUT, DELETE, etc.)
+#     allow_headers=["*"],  # Allow all headers
+# )
 
 # Register the router
 app.include_router(profiles_router)
