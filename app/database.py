@@ -8,8 +8,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 # TODO: We want to use PostgreSQL in production, but for now we are using SQLite
 
 # Use test.db for tests, dev.db otherwise to prevent wiping my data when running tests
-is_testing = "PYTEST_CURRENT_TEST" in os.environ
+is_testing = "PYTEST_VERSION" in os.environ
 DATABASE_URL = f"sqlite+aiosqlite:///./{'test.db' if is_testing else 'dev.db'}"
+print(f"xxx the env is {os.environ}. ")
 
 
 _engine = create_async_engine(DATABASE_URL, echo=True)

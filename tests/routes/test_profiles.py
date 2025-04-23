@@ -45,9 +45,7 @@ async def test_create_profile_new_user(test_client: TestClient) -> None:
 
     # Verify response data
     data = response.json()
-    assert data["email"] == "petr@indiepitcher.comx"
-    # assert data["name"] == mock_firebase_user.name
-    # assert data["avatar_url"] == mock_firebase_user.avatar_url
+    assert data["email"] == "petr@indiepitcher.com"
 
     # Verify analytics service was called
     # analytics_service.identify.assert_awaited_once()
