@@ -1,11 +1,14 @@
 import os
+from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from sqlmodel import select
 
-from app.database import init_db
+from app.database import AsyncSession, async_session, init_db
 from app.main import app
+from app.models.profile import Profile
 
 
 @pytest.fixture
@@ -33,6 +36,13 @@ async def db_setup_and_teardown():
         os.remove("test.db")
 
 
+@pytest_asyncio.fixture
+async def db() -> AsyncGenerator[AsyncSession]:
+    """Create a fresh database session for a test."""
+    async with async_session() as session:
+        yield session
+
+
 # @pytest.fixture
 # def mock_analytics_service():
 #     """Create a mock analytics service."""
@@ -44,8 +54,13 @@ async def db_setup_and_teardown():
 
 # Tests for POST /profiles/ endpoint
 @pytest.mark.asyncio
-async def test_create_profile_new_user(test_client: TestClient) -> None:
+async def test_create_profile_new_user(
+    test_client: TestClient, db: AsyncSession
+) -> None:
     """Test creating a new profile for a user that doesn't exist yet."""
+
+    # Check that there are no profiles in the database initially
+    assert len((await db.exec(select(Profile))).all()) == 0
 
     # Make the request with Authorization header
     response = test_client.post(
@@ -58,6 +73,8 @@ async def test_create_profile_new_user(test_client: TestClient) -> None:
     # Verify response data
     data = response.json()
     assert data["email"] == "petr@indiepitcher.com"
+
+    assert len((await db.exec(select(Profile))).all()) == 1
 
     # Verify analytics service was called
     # mock_analytics_service.identify.assert_awaited_once()

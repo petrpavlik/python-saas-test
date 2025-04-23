@@ -12,9 +12,7 @@ is_testing = "PYTEST_VERSION" in os.environ
 DATABASE_URL = f"sqlite+aiosqlite:///./{'test.db' if is_testing else 'dev.db'}"
 
 _engine = create_async_engine(DATABASE_URL, echo=True)
-_async_session = async_sessionmaker(
-    _engine, class_=AsyncSession, expire_on_commit=False
-)
+async_session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def init_db():
@@ -23,7 +21,7 @@ async def init_db():
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession]:
-    async with _async_session() as session:
+    async with async_session() as session:
         yield session
 
 
