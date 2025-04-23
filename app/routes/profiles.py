@@ -84,18 +84,53 @@ async def create_profile(
         client_ip = request.client.host
         headers_dict["client_ip"] = client_ip
 
+    # Start a transaction by beginning a nested transaction
+    # async with db.begin():
+    # Create the profile
     profile = Profile(
         email=firebaseUser.email,
         signup_attribution_data=headers_dict,
         name=firebaseUser.name,
         avatar_url=firebaseUser.avatar_url,
     )
-
     db.add(profile)
     await db.commit()
     await db.refresh(profile)
 
+    # # Create a default organization for this new profile
+    # org_name = (
+    #     f"{profile.name}'s Organization" if profile.name else "Default Organization"
+    # )
+
+    # organization = Organization(
+    #     name=org_name,
+    # )
+    # db.add(organization)
+    # await db.commit()
+    # await db.refresh(organization)
+
+    # # Create membership linking the profile to the organization
+    # membership = OrganizationMembership(
+    #     profile_id=profile.id,
+    #     organization_id=organization.id,
+    #     role=OrganizationRole.ADMIN,  # Make them the owner of their org
+    # )
+    # db.add(membership)
+    # await db.commit()
+    # await db.refresh(membership)
+
+    # Now all the above operations have been committed as a single transaction
+
     await analyticsService.identify(profile=profile)
+
+    # # Track organization creation event
+    # analyticsService.track(
+    #     event="organization_created",
+    #     properties={
+    #         "organization_id": str(organization.id),
+    #         "organization_name": org_name,
+    #     },
+    # )
 
     background_tasks.add_task(sendWelcomeEmail, profile, emailService)
 
@@ -108,4 +143,24 @@ async def get_profile(profile: Profile = Depends(get_profile_from_request)):
     return profile
 
 
-# More endpoints for update, delete, etc.
+@router.delete("/", status_code=204)
+async def delete_profile(
+    profile: Profile = Depends(get_profile_from_request),
+    db: AsyncSession = Depends(get_db_session),
+    analyticsService: AnalyticsServiceProtocol = Depends(get_analytics_service),
+) -> None:
+    """
+    Delete the user's profile.
+
+    Returns:
+        204 No Content on successful deletion
+    """
+    # Track the deletion event in analytics
+    analyticsService.track(
+        event="profile_deleted",
+        properties={"profile_id": str(profile.email)},
+    )
+
+    # Delete the profile
+    await db.delete(profile)
+    await db.commit()

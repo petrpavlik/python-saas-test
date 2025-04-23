@@ -1,0 +1,33 @@
+import uuid
+from datetime import datetime
+from typing import ClassVar
+
+from sqlalchemy import Column, DateTime, func
+from sqlmodel import Field, SQLModel
+
+
+class Organization(SQLModel, table=True):
+    """Organization model with identification and status information."""
+
+    __tablename__: ClassVar[str] = "organizations"
+
+    id: uuid.UUID = Field(
+        default_factory=uuid.uuid4,
+        primary_key=True,
+        index=True,
+    )
+    name: str | None = Field(default=None)
+
+    # Timestamp fields
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=func.now()),
+    )
+
+    # members: list["OrganizationMembership"] = Relationship(
+    #     back_populates="organization"
+    # )

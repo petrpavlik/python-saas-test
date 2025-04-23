@@ -7,12 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.database import init_db
 from app.main import app
-
-# def get_analytics_service() -> AnalyticsServiceProtocol:
-#     # In a real-world scenario, you would return an instance of the actual analytics service
-#     # For example, if you're using Segment:
-#     # return SegmentAnalyticsService()
-#     return MockAnalyticsService()
+from app.service import analytics_service
 
 
 @pytest.fixture
@@ -43,26 +38,10 @@ async def db_setup_and_teardown():
 @pytest.fixture
 def mock_analytics_service():
     """Create a mock analytics service."""
-    with patch("app.routes.profiles.get_analytics_service") as mock_analytics:
+    with patch.object(analytics_service, "get_analytics_service") as mock:
         service = AsyncMock()
-        mock_analytics.return_value = service
+        mock.return_value = service
         yield service
-
-
-# Mock service dependencies
-# @pytest.fixture
-# def mock_services():
-#     """Mock analytics and email services."""
-#     with patch("app.routes.profiles.get_analytics_service") as mock_analytics:
-#         with patch("app.routes.profiles.get_email_service") as mock_email:
-#             with patch("app.routes.profiles.sendWelcomeEmail") as mock_welcome:
-#                 mock_analytics_service = AsyncMock()
-#                 mock_analytics.return_value = mock_analytics_service
-
-#                 mock_email_service = AsyncMock()
-#                 mock_email.return_value = mock_email_service
-
-#                 yield mock_analytics_service, mock_email_service, mock_welcome
 
 
 # Tests for POST /profiles/ endpoint
@@ -86,3 +65,5 @@ async def test_create_profile_new_user(
 
     # Verify analytics service was called
     mock_analytics_service.identify.assert_awaited_once()
+
+    # TODO: figure out how to test that sendWelcomeEmail was dispatched in a background task

@@ -42,5 +42,9 @@ class Profile(SQLModel, table=True):
         default_factory=dict, sa_column=Column(JSON, nullable=False)
     )
 
+    # organization_memberships: list["OrganizationMembership"] = Relationship(
+    #     back_populates="profile"
+    # )
+
     class Config:
         arbitrary_types_allowed = True

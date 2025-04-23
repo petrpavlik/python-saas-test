@@ -10,8 +10,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 # Use test.db for tests, dev.db otherwise to prevent wiping my data when running tests
 is_testing = "PYTEST_VERSION" in os.environ
 DATABASE_URL = f"sqlite+aiosqlite:///./{'test.db' if is_testing else 'dev.db'}"
-print(f"xxx the env is {os.environ}. ")
-
 
 _engine = create_async_engine(DATABASE_URL, echo=True)
 _async_session = async_sessionmaker(
