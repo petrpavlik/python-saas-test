@@ -1,4 +1,5 @@
 import os
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
@@ -6,6 +7,12 @@ from fastapi.testclient import TestClient
 
 from app.database import init_db
 from app.main import app
+
+# def get_analytics_service() -> AnalyticsServiceProtocol:
+#     # In a real-world scenario, you would return an instance of the actual analytics service
+#     # For example, if you're using Segment:
+#     # return SegmentAnalyticsService()
+#     return MockAnalyticsService()
 
 
 @pytest.fixture
@@ -17,6 +24,9 @@ def test_client() -> TestClient:
 @pytest_asyncio.fixture(autouse=True)
 async def db_setup_and_teardown():
     """Setup and teardown for each test."""
+
+    # app.dependency_overrides[get_analytics_service] = AsyncMock()
+
     # Setup: Initialize the database
     await init_db()
 
@@ -28,6 +38,15 @@ async def db_setup_and_teardown():
     # Delete the test.db file if it exists
     if os.path.exists("test.db"):
         os.remove("test.db")
+
+
+@pytest.fixture
+def mock_analytics_service():
+    """Create a mock analytics service."""
+    with patch("app.routes.profiles.get_analytics_service") as mock_analytics:
+        service = AsyncMock()
+        mock_analytics.return_value = service
+        yield service
 
 
 # Mock service dependencies
@@ -48,9 +67,10 @@ async def db_setup_and_teardown():
 
 # Tests for POST /profiles/ endpoint
 @pytest.mark.asyncio
-async def test_create_profile_new_user(test_client: TestClient) -> None:
+async def test_create_profile_new_user(
+    test_client: TestClient, mock_analytics_service
+) -> None:
     """Test creating a new profile for a user that doesn't exist yet."""
-    # analytics_service, _, _ = mock_services
 
     # Make the request with Authorization header
     response = test_client.post(
@@ -65,4 +85,4 @@ async def test_create_profile_new_user(test_client: TestClient) -> None:
     assert data["email"] == "petr@indiepitcher.com"
 
     # Verify analytics service was called
-    # analytics_service.identify.assert_awaited_once()
+    mock_analytics_service.identify.assert_awaited_once()

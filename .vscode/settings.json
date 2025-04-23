@@ -7,6 +7,9 @@
     "python.terminal.activateEnvInCurrentTerminal": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+    "testExplorer.useNativeTesting": true,
     "files.exclude": {
       "**/.git": true,
       "**/.pytest_cache": true,
