@@ -20,6 +20,11 @@ async def init_db():
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
+async def nuke_db():
+    async with _engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+
+
 async def get_db_session() -> AsyncGenerator[AsyncSession]:
     async with async_session() as session:
         yield session

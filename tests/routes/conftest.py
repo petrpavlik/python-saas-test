@@ -1,4 +1,3 @@
-import os
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
@@ -6,7 +5,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 
-from app.database import AsyncSession, async_session, init_db
+from app.database import AsyncSession, async_session, init_db, nuke_db
 from app.main import app
 
 
@@ -16,17 +15,14 @@ def test_client() -> TestClient:
     return TestClient(app)
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True, scope="function", loop_scope="function")
 async def db_setup_and_teardown():
     """Setup and teardown for each test."""
     # Setup: Initialize the database
+    await nuke_db()
     await init_db()
 
-    # Teardown: Clean up the database after each test
     yield
-    # Delete the test.db file if it exists
-    if os.path.exists("test.db"):
-        os.remove("test.db")
 
 
 @pytest_asyncio.fixture
