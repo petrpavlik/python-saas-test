@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from fastapi_pagination import add_pagination
 
 from app.database import init_db
 from app.models.firebase_auth_user import FirebaseAuthUser
@@ -17,6 +18,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+add_pagination(app)  # important! add pagination to your app
 
 
 @app.middleware("http")

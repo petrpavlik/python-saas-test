@@ -285,6 +285,20 @@ wheels = [
 ]
 
 [[package]]
+name = "fastapi-pagination"
+version = "0.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/eb/6e/42aca34d094e004a92155f2f6e2129faa3ea00aef313f630f7d589c2a13f/fastapi_pagination-0.13.0.tar.gz", hash = "sha256:665f434ca7e8a570fb6cb5d84a557441b21a984eb2126c37bae31b1dae14875a", size = 542359 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/58/58/730c6fcda9fa65661879aa9113067dbfe3c7547d2567c6f91c18c7d6a297/fastapi_pagination-0.13.0-py3-none-any.whl", hash = "sha256:064af558ca1f58a04e93d0479a1a0cf12c658ff21a97bd1dddb2d76f6cf4654f", size = 49450 },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -362,6 +376,7 @@ dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },
     { name = "fastapi" },
+    { name = "fastapi-pagination" },
     { name = "greenlet" },
     { name = "httpx" },
     { name = "passlib", extra = ["bcrypt"] },
@@ -389,6 +404,7 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.21.0" },
     { name = "alembic", specifier = ">=1.12.0" },
     { name = "fastapi", specifier = ">=0.104.0" },
+    { name = "fastapi-pagination", specifier = ">=0.13.0" },
     { name = "greenlet", specifier = ">=3.1.1" },
     { name = "httpx", specifier = ">=0.24.1" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
