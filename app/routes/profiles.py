@@ -165,6 +165,30 @@ async def delete_profile(
         properties={"profile_id": str(profile.email)},
     )
 
+    await db.refresh(
+        # looks like sqlmodel cannot can only load immediate relationships :(
+        profile,
+        ["organization_memberships"],
+    )
+    for membership in profile.organization_memberships:
+        organization = await db.get(Organization, membership.organization_id)
+        if organization is None:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Organization with id {membership.organization_id} not found",
+            )
+        await db.refresh(
+            organization, ["memberships"]
+        )  # can this be a part of the get?
+        other_admin_memberships = [
+            m
+            for m in organization.memberships
+            if m.role == OrganizationRole.ADMIN and m.profile_id != profile.id
+        ]
+        if not other_admin_memberships:
+            await db.delete(organization)
+
     # Delete the profile
     await db.delete(profile)
+
     await db.commit()

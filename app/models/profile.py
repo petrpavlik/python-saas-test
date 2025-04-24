@@ -6,7 +6,6 @@ from sqlalchemy import JSON, Column, DateTime, func
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.models.organization import Organization
     from app.models.organization_membership import OrganizationMembership
 
 
@@ -49,20 +48,6 @@ class Profile(SQLModel, table=True):
     organization_memberships: list["OrganizationMembership"] = Relationship(
         back_populates="profile", cascade_delete=True
     )
-
-    @property
-    def organizations(self) -> list["Organization"]:
-        """
-        Returns a list of organizations this profile is a member of.
-
-        This property provides convenient access to the organizations without
-        having to navigate through organization_memberships relationship.
-        """
-        return (
-            [membership.organization for membership in self.organization_memberships]
-            if self.organization_memberships
-            else []
-        )
 
     class Config:
         arbitrary_types_allowed = True

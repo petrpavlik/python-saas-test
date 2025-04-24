@@ -98,7 +98,7 @@ async def test_create_profile_new_user(
     assert response.status_code == 204
 
     assert len((await db.exec(select(Profile))).all()) == 0
-    # assert len((await db.exec(select(Organization))).all()) == 0
+    assert len((await db.exec(select(Organization))).all()) == 0
 
     # Verify analytics service was called
     # mock_analytics_service.identify.assert_awaited_once()
