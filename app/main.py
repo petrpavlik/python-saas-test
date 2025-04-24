@@ -6,7 +6,8 @@ from fastapi_pagination import add_pagination
 
 from app.database import init_db
 from app.models.firebase_auth_user import FirebaseAuthUser
-from app.routes.profiles import router as profiles_router
+from app.routes.organizations import router as profiles_router
+from app.routes.profiles import router as organization_router
 
 
 @asynccontextmanager
@@ -23,6 +24,13 @@ add_pagination(app)  # important! add pagination to your app
 
 @app.middleware("http")
 async def jwt_auth_middleware(request: Request, call_next) -> Response:
+    if request.url.path == "/":
+        return await call_next(request)
+    if request.url.path.startswith("/docs"):
+        return await call_next(request)
+    if request.url.path.startswith("/openapi.json"):
+        return await call_next(request)
+
     # Looks like I cannot throw an exception in the middleware (ends up with internal server error), so I have to return a JSONResponse, this sucks
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
@@ -54,6 +62,7 @@ async def jwt_auth_middleware(request: Request, call_next) -> Response:
 
 # Register the router
 app.include_router(profiles_router)
+app.include_router(organization_router)
 
 
 @app.get("/")
