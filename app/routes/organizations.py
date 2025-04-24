@@ -84,9 +84,7 @@ async def get_organization(
     membership = membership_result.first()
 
     if not membership:
-        raise HTTPException(
-            status_code=403, detail="You don't have access to this organization"
-        )
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     # Get the organization
     result = await db.exec(
