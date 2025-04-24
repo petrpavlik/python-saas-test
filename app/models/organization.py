@@ -1,9 +1,12 @@
 import uuid
 from datetime import datetime
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from sqlalchemy import Column, DateTime, func
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.models.organization_membership import OrganizationMembership
 
 
 class Organization(SQLModel, table=True):
@@ -28,6 +31,6 @@ class Organization(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=func.now()),
     )
 
-    # members: list["OrganizationMembership"] = Relationship(
-    #     back_populates="organization"
-    # )
+    memberships: list["OrganizationMembership"] = Relationship(
+        back_populates="organization", cascade_delete=True
+    )

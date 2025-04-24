@@ -4,6 +4,8 @@ from sqlmodel import select
 
 from app.database import AsyncSession, get_db_session
 from app.models.firebase_auth_user import FirebaseAuthUser
+from app.models.organization import Organization
+from app.models.organization_membership import OrganizationMembership, OrganizationRole
 from app.models.profile import Profile
 from app.service.analytics_service import (
     AnalyticsServiceProtocol,
@@ -94,32 +96,34 @@ async def create_profile(
         avatar_url=firebaseUser.avatar_url,
     )
     db.add(profile)
-    await db.commit()
+    await db.flush()
     await db.refresh(profile)
 
     # # Create a default organization for this new profile
-    # org_name = (
-    #     f"{profile.name}'s Organization" if profile.name else "Default Organization"
-    # )
+    org_name = (
+        f"{profile.name}'s Organization" if profile.name else "Default Organization"
+    )
 
-    # organization = Organization(
-    #     name=org_name,
-    # )
-    # db.add(organization)
-    # await db.commit()
-    # await db.refresh(organization)
+    organization = Organization(
+        name=org_name,
+    )
+    db.add(organization)
+    await db.flush()
+    await db.refresh(organization)
 
     # # Create membership linking the profile to the organization
-    # membership = OrganizationMembership(
-    #     profile_id=profile.id,
-    #     organization_id=organization.id,
-    #     role=OrganizationRole.ADMIN,  # Make them the owner of their org
-    # )
-    # db.add(membership)
-    # await db.commit()
-    # await db.refresh(membership)
+    membership = OrganizationMembership(
+        profile_id=profile.id,
+        organization_id=organization.id,
+        role=OrganizationRole.ADMIN,  # Make them the owner of their org
+    )
+    db.add(membership)
+    await db.flush()
+    await db.refresh(membership)
 
     # Now all the above operations have been committed as a single transaction
+
+    await db.commit()
 
     await analyticsService.identify(profile=profile)
 

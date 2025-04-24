@@ -8,6 +8,7 @@ from sqlmodel import select
 
 from app.database import AsyncSession, async_session, init_db
 from app.main import app
+from app.models.organization import Organization
 from app.models.profile import Profile
 
 
@@ -67,14 +68,37 @@ async def test_create_profile_new_user(
         "/profiles/", headers={"Authorization": "Bearer petr_token"}
     )
 
-    # Assertions
     assert response.status_code == 200
-
-    # Verify response data
     data = response.json()
     assert data["email"] == "petr@indiepitcher.com"
 
     assert len((await db.exec(select(Profile))).all()) == 1
+    assert len((await db.exec(select(Organization))).all()) == 1
+
+    response = test_client.post(
+        "/profiles/", headers={"Authorization": "Bearer petr_token"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "petr@indiepitcher.com"
+
+    response = test_client.get(
+        "/profiles/", headers={"Authorization": "Bearer petr_token"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "petr@indiepitcher.com"
+
+    response = test_client.delete(
+        "/profiles/", headers={"Authorization": "Bearer petr_token"}
+    )
+
+    assert response.status_code == 204
+
+    assert len((await db.exec(select(Profile))).all()) == 0
+    # assert len((await db.exec(select(Organization))).all()) == 0
 
     # Verify analytics service was called
     # mock_analytics_service.identify.assert_awaited_once()

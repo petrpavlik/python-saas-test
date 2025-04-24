@@ -1,10 +1,14 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from sqlalchemy import Column, DateTime, String, UniqueConstraint, func
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.models.organization import Organization
+    from app.models.profile import Profile
 
 
 class OrganizationRole(str, Enum):
@@ -33,10 +37,12 @@ class OrganizationMembership(SQLModel, table=True):
     profile_id: uuid.UUID = Field(
         foreign_key="profiles.id",
         index=True,
+        ondelete="CASCADE",
     )
     organization_id: uuid.UUID = Field(
         foreign_key="organizations.id",
         index=True,
+        ondelete="CASCADE",
     )
 
     # Role of the profile in the organization
@@ -59,9 +65,12 @@ class OrganizationMembership(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
-    # Relationships
-    # profile: "Profile" = Relationship(back_populates="organization_memberships")
-    # organization: "Organization" = Relationship(back_populates="members")
+    profile: "Profile" = Relationship(
+        back_populates="organization_memberships"  # Points to the 'organization_memberships' attribute in Profile
+    )
+    organization: "Organization" = Relationship(
+        back_populates="memberships"  # Points to the 'memberships' attribute in Organization
+    )
 
     class Config:
         arbitrary_types_allowed = True

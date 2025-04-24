@@ -1,9 +1,13 @@
 import uuid
 from datetime import datetime
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from sqlalchemy import JSON, Column, DateTime, func
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.models.organization import Organization
+    from app.models.organization_membership import OrganizationMembership
 
 
 class Profile(SQLModel, table=True):
@@ -42,9 +46,23 @@ class Profile(SQLModel, table=True):
         default_factory=dict, sa_column=Column(JSON, nullable=False)
     )
 
-    # organization_memberships: list["OrganizationMembership"] = Relationship(
-    #     back_populates="profile"
-    # )
+    organization_memberships: list["OrganizationMembership"] = Relationship(
+        back_populates="profile", cascade_delete=True
+    )
+
+    @property
+    def organizations(self) -> list["Organization"]:
+        """
+        Returns a list of organizations this profile is a member of.
+
+        This property provides convenient access to the organizations without
+        having to navigate through organization_memberships relationship.
+        """
+        return (
+            [membership.organization for membership in self.organization_memberships]
+            if self.organization_memberships
+            else []
+        )
 
     class Config:
         arbitrary_types_allowed = True
