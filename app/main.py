@@ -47,6 +47,12 @@ async def jwt_auth_middleware(request: Request, call_next) -> Response:
             user_id="1234567890",  # This would be the Firebase user ID
         )
         return await call_next(request)
+    elif token == "john_token":
+        request.state.firebase_user = FirebaseAuthUser(
+            email="john@indiepitcher.com",
+            user_id="0987654321",  # This would be the Firebase user ID
+        )
+        return await call_next(request)
     else:
         return JSONResponse(status_code=401, content={"detail": "Invalid token"})
 

@@ -132,20 +132,16 @@ async def test_get_organization_by_id(test_client: TestClient):
     )
     assert not_found_response.status_code == status.HTTP_404_NOT_FOUND
 
-    # # Test accessing organization without authorization
-    # unauthorized_response = test_client.get(f"/organizations/{organization_id}")
-    # assert unauthorized_response.status_code == status.HTTP_401_UNAUTHORIZED
+    # Test accessing organization where user is not a member
+    # First create another user
+    another_profile_response = test_client.post(
+        "/profiles/", headers={"Authorization": "Bearer john_token"}
+    )
+    assert another_profile_response.status_code == status.HTTP_200_OK
 
-    # # Test accessing organization where user is not a member
-    # # First create another user
-    # another_profile_response = test_client.post(
-    #     "/profiles/", headers={"Authorization": "Bearer another_token"}
-    # )
-    # assert another_profile_response.status_code == status.HTTP_200_OK
-
-    # # Try to access the organization as the new user
-    # forbidden_response = test_client.get(
-    #     f"/organizations/{organization_id}",
-    #     headers={"Authorization": "Bearer another_token"},
-    # )
-    # assert forbidden_response.status_code == status.HTTP_403_FORBIDDEN
+    # Try to access the organization as the new user
+    forbidden_response = test_client.get(
+        f"/organizations/{organization_id}",
+        headers={"Authorization": "Bearer john_token"},
+    )
+    assert forbidden_response.status_code == status.HTTP_404_NOT_FOUND
