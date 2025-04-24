@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlmodel import select
 
 from app.database import AsyncSession, get_db_session
@@ -24,12 +24,23 @@ class OrganizationCreate(BaseModel):
     """Schema for creating a new organization."""
 
     name: str
+    name: str = Field(
+        min_length=1,
+        max_length=100,
+        description="Organization name",
+        examples=["My Organization"],
+    )
 
 
 class OrganizationUpdate(BaseModel):
     """Schema for updating an existing organization."""
 
-    name: str | None = None
+    name: str = Field(
+        min_length=1,
+        max_length=100,
+        description="Organization name",
+        examples=["My Organization"],
+    )
 
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
@@ -91,6 +102,43 @@ async def get_organization(
     return OrganizationResponse(id=str(organization.id), name=organization.name)
 
 
+@router.post("/", response_model=OrganizationResponse)
+async def create_organization(
+    org_data: OrganizationCreate,
+    profile: Profile = Depends(get_profile_from_request),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    Create a new organization.
+
+    The authenticated user will automatically be added as an admin of the new organization.
+    Returns the created organization details.
+    """
+    # Create the new organization
+    organization = Organization(
+        name=org_data.name,
+    )
+    db.add(organization)
+
+    # Flush to generate the ID for the organization
+    await db.flush()
+
+    # Create membership for the current user as admin
+    membership = OrganizationMembership(
+        profile_id=profile.id,
+        organization_id=organization.id,
+        role=OrganizationRole.ADMIN,
+    )
+    db.add(membership)
+
+    # Commit both the organization and membership
+    await db.commit()
+    await db.refresh(organization)
+
+    # Return the created organization
+    return OrganizationResponse(id=str(organization.id), name=organization.name)
+
+
 @router.delete("/{organization_id}", status_code=204)
 async def delete_organization(
     organization_id: uuid.UUID,
@@ -134,3 +182,57 @@ async def delete_organization(
 
     # Return no content on successful deletion
     return None
+
+
+@router.patch("/{organization_id}", response_model=OrganizationResponse)
+async def update_organization(
+    organization_id: uuid.UUID,
+    org_data: OrganizationUpdate,
+    profile: Profile = Depends(get_profile_from_request),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update an existing organization.
+
+    Only admin users can update organization details.
+    Returns the updated organization.
+    """
+    # Check if the user is an admin of this organization
+    membership_result = await db.exec(
+        select(OrganizationMembership).where(
+            OrganizationMembership.profile_id == profile.id,
+            OrganizationMembership.organization_id == organization_id,
+        )
+    )
+    membership = membership_result.first()
+
+    if not membership or membership.role != OrganizationRole.ADMIN:
+        # Return 404 for consistency with delete endpoint
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Get the organization
+    org_result = await db.exec(
+        select(Organization).where(Organization.id == organization_id)
+    )
+    organization = org_result.first()
+
+    if not organization:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Update the organization with new values
+    update_data = org_data.dict(exclude_unset=True)
+
+    if not update_data:
+        # No fields to update
+        return OrganizationResponse(id=str(organization.id), name=organization.name)
+
+    # Apply updates
+    for key, value in update_data.items():
+        setattr(organization, key, value)
+
+    # Save changes
+    await db.commit()
+    await db.refresh(organization)
+
+    # Return the updated organization
+    return OrganizationResponse(id=str(organization.id), name=organization.name)
