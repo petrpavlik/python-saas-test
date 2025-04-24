@@ -55,7 +55,7 @@ async def test_create_organization_success(
 
 
 @pytest.mark.asyncio
-async def test_create_organization_validation_error(test_client: TestClient):
+async def test_create_organization_validation_error(test_client: TestClient) -> None:
     """Test validation errors during organization creation"""
     # Create profile first
     test_client.post("/profiles/", headers={"Authorization": "Bearer petr_token"})
@@ -85,7 +85,7 @@ async def test_create_organization_validation_error(test_client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_create_organization_unauthorized(test_client: TestClient):
+async def test_create_organization_unauthorized(test_client: TestClient) -> None:
     """Test organization creation without authentication"""
     response = test_client.post("/organizations/", json={"name": "Unauthorized Org"})
 
@@ -94,7 +94,7 @@ async def test_create_organization_unauthorized(test_client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_organization_by_id(test_client: TestClient):
+async def test_get_organization_by_id(test_client: TestClient) -> None:
     """Test getting an organization by ID"""
 
     # First, create a profile
@@ -145,3 +145,99 @@ async def test_get_organization_by_id(test_client: TestClient):
         headers={"Authorization": "Bearer john_token"},
     )
     assert forbidden_response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_get_paginated_organizations(
+    test_client: TestClient, db: AsyncSession
+) -> None:
+    """Test getting a paginated list of organizations"""
+
+    # Create a profile
+    profile_response = test_client.post(
+        "/profiles/", headers={"Authorization": "Bearer petr_token"}
+    )
+    assert profile_response.status_code == status.HTTP_200_OK
+
+    # Create multiple organizations
+    org_names = [f"Organization {i}" for i in range(1, 6)]  # 5 organizations
+    created_org_ids = []
+
+    for name in org_names:
+        response = test_client.post(
+            "/organizations/",
+            json={"name": name},
+            headers={"Authorization": "Bearer petr_token"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        created_org_ids.append(response.json()["id"])
+
+    # Test default pagination (first page)
+    response = test_client.get(
+        "/organizations/", headers={"Authorization": "Bearer petr_token"}
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    # Check pagination structure
+    assert "items" in data
+    assert "total" in data
+    assert "page" in data
+    assert "size" in data
+    assert "pages" in data
+
+    # Verify content (6 organizations total - 5 created + 1 from profile creation)
+    assert data["total"] == 6
+    assert len(data["items"]) == 6  # Should match the size parameter
+
+    # Test second page with custom page size
+    response = test_client.get(
+        "/organizations/?page=2&size=2",  # 2 items per page, page 2
+        headers={"Authorization": "Bearer petr_token"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    # Verify second page has correct parameters
+    assert data["page"] == 2
+    assert data["size"] == 2
+    assert len(data["items"]) == 2
+
+    # Test with invalid page parameters
+    response = test_client.get(
+        "/organizations/?page=0&size=2",  # Page 0 is invalid
+        headers={"Authorization": "Bearer petr_token"},
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    # Test with another user who isn't a member of these organizations
+    # Create another profile
+    test_client.post("/profiles/", headers={"Authorization": "Bearer john_token"})
+
+    # New user creates their own organization
+    test_client.post(
+        "/organizations/",
+        json={"name": "John's Organization"},
+        headers={"Authorization": "Bearer john_token"},
+    )
+
+    # Get organizations for the new user
+    response = test_client.get(
+        "/organizations/", headers={"Authorization": "Bearer john_token"}
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    # New user should only see their own organizations (1 + 1 from profile creation)
+    assert data["total"] == 2
+
+    # Verify organization names are correct
+    org_names = [org["name"] for org in data["items"]]
+    assert "John's Organization" in org_names
+
+    # Ensure they can't see other user's organizations
+    for name in [f"Organization {i}" for i in range(1, 6)]:
+        assert name not in org_names

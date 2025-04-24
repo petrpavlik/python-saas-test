@@ -17,7 +17,7 @@ class OrganizationResponse(BaseModel):
     """Base schema with common organization attributes."""
 
     name: str
-    id: str
+    id: uuid.UUID
 
 
 class OrganizationCreate(BaseModel):
@@ -97,7 +97,7 @@ async def get_organization(
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    return OrganizationResponse(id=str(organization.id), name=organization.name)
+    return OrganizationResponse(id=organization.id, name=organization.name)
 
 
 @router.post("/", response_model=OrganizationResponse)
@@ -134,7 +134,7 @@ async def create_organization(
     await db.refresh(organization)
 
     # Return the created organization
-    return OrganizationResponse(id=str(organization.id), name=organization.name)
+    return OrganizationResponse(id=organization.id, name=organization.name)
 
 
 @router.delete("/{organization_id}", status_code=204)
@@ -222,7 +222,7 @@ async def update_organization(
 
     if not update_data:
         # No fields to update
-        return OrganizationResponse(id=str(organization.id), name=organization.name)
+        return OrganizationResponse(id=organization.id, name=organization.name)
 
     # Apply updates
     for key, value in update_data.items():
@@ -233,4 +233,4 @@ async def update_organization(
     await db.refresh(organization)
 
     # Return the updated organization
-    return OrganizationResponse(id=str(organization.id), name=organization.name)
+    return OrganizationResponse(id=organization.id, name=organization.name)
