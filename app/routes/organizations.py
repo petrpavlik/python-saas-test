@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import apaginate
 from pydantic import BaseModel, Field
 from sqlmodel import select
 
@@ -60,7 +60,7 @@ async def get_organizations(
         .order_by("created_at")
     )
 
-    return await paginate(db, query)
+    return await apaginate(db, query)
 
 
 @router.get("/{organization_id}", response_model=OrganizationResponse)

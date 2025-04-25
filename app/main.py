@@ -72,5 +72,5 @@ app.include_router(organization_router)
 
 
 @app.get("/")
-def read_root() -> dict[str, str]:
+async def read_root() -> dict[str, str]:
     return {"Hello": "World"}

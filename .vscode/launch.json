@@ -14,16 +14,11 @@
         {
             "name": "API",
             "type": "debugpy",
-            // "env": {
-            //     "PYDEVD_DISABLE_FILE_VALIDATION": "1"
-            // },
             "request": "launch",
             "module": "uvicorn",
             "args": [
                 "app.main:app",
                 "--reload",
-                "--workers",
-                "1",
                 "--host",
                 "127.0.0.1",
                 "--port",

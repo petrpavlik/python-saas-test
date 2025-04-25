@@ -361,8 +361,6 @@ dependencies = [
     { name = "httpx" },
     { name = "passlib", extra = ["bcrypt"] },
     { name = "pydantic", extra = ["email"] },
-    { name = "pytest-asyncio" },
-    { name = "pytest-mock" },
     { name = "python-jose", extra = ["cryptography"] },
     { name = "python-multipart" },
     { name = "sqlalchemy" },
@@ -374,7 +372,9 @@ dependencies = [
 dev = [
     { name = "mypy" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "pytest-mock" },
     { name = "ruff" },
 ]
 
@@ -388,8 +388,6 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.24.1" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.4.2" },
-    { name = "pytest-asyncio", specifier = ">=0.26.0" },
-    { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.3.0" },
     { name = "python-multipart", specifier = ">=0.0.6" },
     { name = "sqlalchemy", specifier = ">=2.0.21" },
@@ -401,7 +399,9 @@ requires-dist = [
 dev = [
     { name = "mypy", specifier = ">=1.5.1" },
     { name = "pytest", specifier = ">=7.4.2" },
+    { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-cov", specifier = ">=4.1.0" },
+    { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "ruff", specifier = ">=0.0.292" },
 ]
 
