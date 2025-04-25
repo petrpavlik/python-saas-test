@@ -7,7 +7,13 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from fastapi_pagination import add_pagination
 
-from app.database import AsyncSession, async_session, init_db, nuke_db
+from app.database import (
+    AsyncSession,
+    async_session,
+    close_db_connection,
+    init_db,
+    nuke_db,
+)
 from app.main import app
 
 
@@ -21,6 +27,7 @@ def test_client() -> TestClient:
 async def db_setup_and_teardown() -> AsyncGenerator[Any, Any]:
     """Setup and teardown for each test."""
     # Setup: Initialize the database
+    await close_db_connection()
     await nuke_db()
     await init_db()
     add_pagination(

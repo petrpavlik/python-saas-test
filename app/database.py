@@ -30,9 +30,16 @@ async def get_db_session() -> AsyncGenerator[AsyncSession]:
         yield session
 
 
+async def close_db_connection() -> None:
+    """Close the database connection when the application shuts down."""
+    if _engine is not None:
+        await _engine.dispose()
+
+
 __all__ = [
     "AsyncSession",
     "create_async_engine",
     "get_db_session",
     "init_db",
+    "close_db_connection",
 ]

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 
-from app.database import init_db
+from app.database import close_db_connection, init_db
 from app.models.firebase_auth_user import FirebaseAuthUser
 from app.routes.organizations import router as profiles_router
 from app.routes.profiles import router as organization_router
@@ -16,6 +16,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
     # Shutdown: Add any cleanup code here if needed
+    await close_db_connection()
 
 
 app = FastAPI(lifespan=lifespan)
