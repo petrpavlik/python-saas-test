@@ -15,12 +15,12 @@ _engine = create_async_engine(DATABASE_URL, echo=True)
 async_session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
-async def init_db():
+async def init_db() -> None:
     async with _engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-async def nuke_db():
+async def nuke_db() -> None:
     async with _engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
 
