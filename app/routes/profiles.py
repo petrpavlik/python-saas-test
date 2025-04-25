@@ -66,7 +66,7 @@ async def create_profile(
         email=firebaseUser.email,
         signup_attribution_data=headers_dict,
         name=firebaseUser.name,
-        avatar_url=firebaseUser.avatar_url,
+        avatar_url=str(firebaseUser.avatar_url) if firebaseUser.avatar_url else None,
     )
     db.add(profile)
     await db.flush()
