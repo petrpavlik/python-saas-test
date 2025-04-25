@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
 
 class FirebaseAuthUser(BaseModel):
@@ -10,7 +10,7 @@ class FirebaseAuthUser(BaseModel):
     email: EmailStr
     user_id: str  # Firebase user ID
     name: str | None = None
-    avatar_url: str | None = None
+    avatar_url: HttpUrl | None = Field(default=None, min_length=1)
 
     class Config:
         """Pydantic configuration."""
