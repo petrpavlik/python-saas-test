@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, ClassVar
 
+from pydantic import EmailStr
 from sqlalchemy import JSON, Column, DateTime, func
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -19,7 +20,7 @@ class Profile(SQLModel, table=True):
         primary_key=True,
         index=True,
     )
-    email: str = Field(unique=True, index=True)
+    email: EmailStr = Field(unique=True, index=True)
     name: str | None = Field(default=None)
     avatar_url: str | None = Field(default=None)
 

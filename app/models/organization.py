@@ -19,7 +19,7 @@ class Organization(SQLModel, table=True):
         primary_key=True,
         index=True,
     )
-    name: str = Field()
+    name: str = Field(min_length=1, max_length=100)
 
     # Timestamp fields
     created_at: datetime = Field(
