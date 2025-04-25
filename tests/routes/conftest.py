@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,7 +18,7 @@ def test_client() -> TestClient:
 
 
 @pytest_asyncio.fixture(autouse=True, scope="function", loop_scope="function")
-async def db_setup_and_teardown():
+async def db_setup_and_teardown() -> AsyncGenerator[Any, Any]:
     """Setup and teardown for each test."""
     # Setup: Initialize the database
     await nuke_db()
