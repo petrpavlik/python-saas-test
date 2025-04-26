@@ -13,7 +13,7 @@ from app.service.analytics_service import MockAnalyticsService
 
 
 @pytest_asyncio.fixture
-def mock_analytics_service(mocker: MockerFixture) -> AsyncMock:
+def mock_analytics_service_identify(mocker: MockerFixture) -> AsyncMock:
     return mocker.patch.object(
         MockAnalyticsService,
         attribute="identify",
@@ -24,7 +24,7 @@ def mock_analytics_service(mocker: MockerFixture) -> AsyncMock:
 # Tests for POST /profiles/ endpoint
 @pytest.mark.asyncio
 async def test_create_and_delete_profile(
-    test_client: TestClient, db: AsyncSession, mock_analytics_service
+    test_client: TestClient, db: AsyncSession, mock_analytics_service_identify
 ) -> None:
     """Test creating a new profile for a user that doesn't exist yet."""
 
@@ -43,7 +43,7 @@ async def test_create_and_delete_profile(
     assert len((await db.exec(select(Profile))).all()) == 1
     assert len((await db.exec(select(Organization))).all()) == 1
 
-    mock_analytics_service.assert_awaited_once()
+    mock_analytics_service_identify.assert_awaited_once()
 
     response = test_client.post(
         "/profiles/", headers={"Authorization": "Bearer petr_token"}

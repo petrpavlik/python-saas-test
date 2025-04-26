@@ -1,6 +1,5 @@
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
@@ -35,6 +34,7 @@ async def db_setup_and_teardown() -> AsyncGenerator[Any, Any]:
     )  # I don't fully understand why I need to add pagination here, but it works
 
     yield
+    await close_db_connection()
 
 
 @pytest_asyncio.fixture
@@ -42,12 +42,3 @@ async def db() -> AsyncGenerator[AsyncSession]:
     """Create a fresh database session for a test."""
     async with async_session() as session:
         yield session
-
-
-@pytest.fixture
-def mock_analytics_service():
-    """Create a mock analytics service."""
-    with patch("app.service.analytics_service.get_analytics_service") as mock_analytics:
-        service = AsyncMock()
-        mock_analytics.return_value = service
-        yield service
