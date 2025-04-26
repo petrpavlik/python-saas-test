@@ -24,7 +24,9 @@ def mock_analytics_service_identify(mocker: MockerFixture) -> AsyncMock:
 # Tests for POST /profiles/ endpoint
 @pytest.mark.asyncio
 async def test_create_and_delete_profile(
-    test_client: TestClient, db: AsyncSession, mock_analytics_service_identify
+    test_client: TestClient,
+    db: AsyncSession,
+    mock_analytics_service_identify: AsyncMock,
 ) -> None:
     """Test creating a new profile for a user that doesn't exist yet."""
 
@@ -74,7 +76,9 @@ async def test_create_and_delete_profile(
 
 
 @pytest.mark.asyncio
-async def test_create_profile_with_invalid_token(test_client, db):
+async def test_create_profile_with_invalid_token(
+    test_client: TestClient, db: AsyncSession
+) -> None:
     """Test that profile creation fails with an invalid authentication token."""
 
     # Attempt to create a profile with an invalid token
