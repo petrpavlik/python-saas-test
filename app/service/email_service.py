@@ -1,6 +1,13 @@
 import logging
 from typing import Protocol
 
+from indiepitcher import EmailBodyFormat, SendEmail
+
+from app.indiepitcher import (
+    get_async_indiepitcher_client,
+    is_async_indiepitcher_client_initialized,
+)
+
 
 class EmailServiceProtocol(Protocol):
     async def send_email(
@@ -24,11 +31,29 @@ class MockEmailService(EmailServiceProtocol):
         )
 
 
+class IndiePitcherEmailService(EmailServiceProtocol):
+    async def send_email(
+        self,
+        to: str,
+        subject: str,
+        markdownBody: str,
+    ) -> None:
+        client = get_async_indiepitcher_client()
+        await client.send_email(
+            SendEmail(
+                to=to,
+                subject=subject,
+                body=markdownBody,
+                body_format=EmailBodyFormat.MARKDOWN,
+            )
+        )
+
+
 def get_email_service() -> EmailServiceProtocol:
-    # In a real-world scenario, you would return an instance of the actual email service
-    # For example, if you're using SendGrid:
-    # return SendGridEmailService()
-    return MockEmailService()
+    if is_async_indiepitcher_client_initialized():
+        return IndiePitcherEmailService()
+    else:
+        return MockEmailService()
 
 
 __all__ = ["EmailServiceProtocol", "get_email_service"]

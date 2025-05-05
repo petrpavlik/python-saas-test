@@ -359,6 +359,7 @@ dependencies = [
     { name = "fastapi-pagination" },
     { name = "greenlet" },
     { name = "httpx" },
+    { name = "indiepitcher" },
     { name = "passlib", extra = ["bcrypt"] },
     { name = "pydantic", extra = ["email"] },
     { name = "python-jose", extra = ["cryptography"] },
@@ -386,6 +387,7 @@ requires-dist = [
     { name = "fastapi-pagination", specifier = ">=0.13.0" },
     { name = "greenlet", specifier = ">=3.1.1" },
     { name = "httpx", specifier = ">=0.24.1" },
+    { name = "indiepitcher", specifier = ">=0.1.0" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.4.2" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.3.0" },
@@ -403,6 +405,19 @@ dev = [
     { name = "pytest-cov", specifier = ">=4.1.0" },
     { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "ruff", specifier = ">=0.0.292" },
+]
+
+[[package]]
+name = "indiepitcher"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1b/54/d4493a1d04e1b9d90c5ee14f2591b256992cc6d8b34e6313cbe12a969e1e/indiepitcher-0.1.0.tar.gz", hash = "sha256:3f70681d55e9ed752f169a90c48cec149e9bfd801b95c4072360890e20d6f32b", size = 35510 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/e7/f9e43a9fc16a470909125620c59cf1c88cd538541b363ef734237430bfa6/indiepitcher-0.1.0-py3-none-any.whl", hash = "sha256:c6e40ceac8f73923eed0c89371459e07a9b05fdc97693f6a70a1e951df65b35f", size = 8170 },
 ]
 
 [[package]]

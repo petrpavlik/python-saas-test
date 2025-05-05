@@ -5,6 +5,10 @@ from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 
 from app.database import close_db_connection, init_db
+from app.indiepitcher import (
+    close_async_indiepitcher_client,
+    create_async_indiepitcher_client,
+)
 from app.models.firebase_auth_user import FirebaseAuthUser
 from app.routes.organizations import router as profiles_router
 from app.routes.profiles import router as organization_router
@@ -14,8 +18,10 @@ from app.routes.profiles import router as organization_router
 async def lifespan(app: FastAPI):
     # Startup: Initialize the database before yielding
     await init_db()
+    create_async_indiepitcher_client()
     yield
     # Shutdown: Add any cleanup code here if needed
+    await close_async_indiepitcher_client()
     await close_db_connection()
 
 
